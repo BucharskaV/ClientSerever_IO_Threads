@@ -9,7 +9,6 @@ public class ServerApplicationGUI extends JFrame {
     private static List<Message> messages = new ArrayList<Message>();;
     private static JList<Message> messageList;
     private static DefaultListModel<Message> messageDefaultListModel = new DefaultListModel<>();
-    private ServerApplication server;
 
     public ServerApplicationGUI() {
         this.setSize(new Dimension(600, 350));
@@ -27,16 +26,10 @@ public class ServerApplicationGUI extends JFrame {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
         this.add(scrollPane, BorderLayout.CENTER);
-
-        server = new ServerApplication("src/Server/ConfigurationFile.txt");
-        server.startServer();
     }
 
     public static void addMessage(Message m){
         messages.add(m);
         messageDefaultListModel.addElement(m);
-    }
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(()-> new ServerApplicationGUI());
     }
 }

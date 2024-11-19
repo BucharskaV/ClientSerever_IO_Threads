@@ -1,5 +1,8 @@
 package Server;
 
+import Client.ClientApplication;
+
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -12,7 +15,7 @@ public class ServerApplication {
     private int port;
     private String name;
     private Set<String> bannedPhrases = new HashSet<>();
-    private Map<String, ClientManager> clients = new HashMap<>();
+    private Map<String, ClientApplication> clients = new HashMap<>();
 
     public ServerApplication(String fileConfigName) {
         loadConfigurationFile(fileConfigName);
@@ -43,8 +46,9 @@ public class ServerApplication {
             ServerApplicationGUI.addMessage(new Message("Server " + name + " started on port " + port));
             /*while (true) {
                 Socket clientSocket = serverSocket.accept();
-                ClientManager clientManager = new ClientManager(clientSocket, this);
-                new Thread(clientManager).start();
+                ClientApplication clientHandler = new ClientApplication(clientSocket, this);
+                clients.add(clientHandler);
+                new Thread(clientHandler).start();
             }*/
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -64,7 +68,7 @@ public class ServerApplication {
         }
     }
 
-    public synchronized void addClient(String name, ClientManager m) {
+    public synchronized void addClient(String name, ClientApplication m) {
         clients.put(name, m);
     }
 
@@ -72,7 +76,13 @@ public class ServerApplication {
         clients.remove(name);
     }
 
-    public synchronized Map<String, ClientManager> getClients() {
+    public synchronized Map<String, ClientApplication> getClients() {
         return new HashMap<>(clients);
+    }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(()-> new ServerApplicationGUI());
+
+        ServerApplication server = new ServerApplication("src/Server/ConfigurationFile.txt");
+        server.startServer();
     }
 }

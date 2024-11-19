@@ -4,19 +4,20 @@ import Server.Message;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientApplicationGUI extends JFrame {
+public class ClientApplicationGUI extends JFrame implements Runnable{
     private static List<Message> messages = new ArrayList<Message>();;
     private static JList<Message> messageList;
     private static DefaultListModel<Message> messageDefaultListModel = new DefaultListModel<>();
-
+    private String username;
     public ClientApplicationGUI() {
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(600, 400);
         this.setLocationRelativeTo(null);
-        this.setVisible(true);
         this.setTitle("Client Application");
         this.setLayout(new BorderLayout());
 
@@ -25,21 +26,27 @@ public class ClientApplicationGUI extends JFrame {
     public void fillGUI(){
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BorderLayout());
-        JPanel usernamePanel = new JPanel();
+        /*JPanel usernamePanel = new JPanel();
         usernamePanel.setLayout(new GridLayout(1, 3));
         JLabel usernameLabel = new JLabel("Username:");
         JTextField usernameField = new JTextField();
         JButton submitButton = new JButton("Submit");
-        usernamePanel.add(usernameLabel);
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                username = usernameField.getText();
+            }
+        });*/
+        /*usernamePanel.add(usernameLabel);
         usernamePanel.add(usernameField);
-        usernamePanel.add(submitButton);
+        usernamePanel.add(submitButton);*/
         JPanel messagePanel = new JPanel();
         messagePanel.setLayout(new BorderLayout());
         JLabel messageLabel = new JLabel("Message:");
         JTextField messageField = new JTextField();
         messagePanel.add(messageLabel, BorderLayout.WEST);
         messagePanel.add(messageField, BorderLayout.CENTER);
-        topPanel.add(usernamePanel, BorderLayout.NORTH);
+        //topPanel.add(usernamePanel, BorderLayout.NORTH);
         topPanel.add(messagePanel, BorderLayout.SOUTH);
 
         JPanel leftPanel = new JPanel();
@@ -68,11 +75,21 @@ public class ClientApplicationGUI extends JFrame {
         this.add(mainPanel, BorderLayout.CENTER);
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public static void addMessage(Message m){
         messages.add(m);
         messageDefaultListModel.addElement(m);
     }
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(()-> new ClientApplicationGUI());
+
+    @Override
+    public void run() {
+        this.setVisible(true);
     }
 }
