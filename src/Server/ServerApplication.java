@@ -40,12 +40,12 @@ public class ServerApplication {
     public void startServer() {
         try {
             serverSocket = new ServerSocket(port);
-            System.out.println("Server " + name + " started on port " + port);
-            while (true) {
+            ServerApplicationGUI.addMessage(new Message("Server " + name + " started on port " + port));
+            /*while (true) {
                 Socket clientSocket = serverSocket.accept();
                 ClientManager clientManager = new ClientManager(clientSocket, this);
                 new Thread(clientManager).start();
-            }
+            }*/
         } catch (IOException e) {
             System.err.println(e.getMessage());
         } finally {
@@ -74,10 +74,5 @@ public class ServerApplication {
 
     public synchronized Map<String, ClientManager> getClients() {
         return new HashMap<>(clients);
-    }
-
-    public static void main(String[] args) {
-        ServerApplication server = new ServerApplication("src/Server/ConfigurationFile.txt");
-        server.startServer();
     }
 }

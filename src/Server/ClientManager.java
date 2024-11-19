@@ -32,7 +32,7 @@ public class ClientManager implements Runnable {
                 return;
             }
             server.addClient(clientUsername, this);
-            System.out.println("Client registered: " + clientName + " (Port: " + clientPort + ")");
+            System.out.println("Client registered: " + clientUsername + " (Port: " + clientPort + ")");
             //broadcast("User " + clientName + " joined.");
 
             //sendClientList();
