@@ -14,6 +14,8 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     private static JList<Message> messageList;
     private static DefaultListModel<Message> messageDefaultListModel = new DefaultListModel<>();
     private String username;
+    private Message lastMessage;
+    private Boolean isNewMessageAppeared = false;
     public ClientApplicationGUI() {
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(600, 400);
@@ -71,8 +73,19 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
         mainPanel.add(leftPanel);
         mainPanel.add(rightPanel);
 
+        JButton submitButton = new JButton("Submit");
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                lastMessage = new Message(username, messageField.getText());
+                messages.add(lastMessage);
+                isNewMessageAppeared = true;
+                messageField.setText("");
+            }
+        });
         this.add(topPanel, BorderLayout.NORTH);
         this.add(mainPanel, BorderLayout.CENTER);
+        this.add(submitButton, BorderLayout.SOUTH);
     }
 
     public String getUsername() {
@@ -86,6 +99,22 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     public static void addMessage(Message m){
         messages.add(m);
         messageDefaultListModel.addElement(m);
+    }
+
+    public Boolean getNewMessageAppeared() {
+        return isNewMessageAppeared;
+    }
+
+    public void setNewMessageAppeared(Boolean newMessageAppeared) {
+        isNewMessageAppeared = newMessageAppeared;
+    }
+
+    public Message getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(Message lastMessage) {
+        this.lastMessage = lastMessage;
     }
 
     @Override

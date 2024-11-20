@@ -1,11 +1,10 @@
 package Server;
 
 import Client.ClientApplication;
+import Client.ClientInfo;
 
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
@@ -14,8 +13,10 @@ public class ServerApplication {
     private ServerSocket serverSocket;
     private int port;
     private String name;
-    private Set<String> bannedPhrases = new HashSet<>();
-    private Map<String, ClientApplication> clients = new HashMap<>();
+    private PrintWriter out;
+    private BufferedReader in;
+    private List<String> bannedPhrases = new ArrayList<>();
+    private List<ClientInfo> clients = new ArrayList<>();
 
     public ServerApplication(String fileConfigName) {
         loadConfigurationFile(fileConfigName);
@@ -43,17 +44,44 @@ public class ServerApplication {
     public void startServer() {
         try {
             serverSocket = new ServerSocket(port);
-            ServerApplicationGUI.addMessage(new Message("Server " + name + " started on port " + port));
-            /*while (true) {
+            ServerApplicationGUI.addMessage(new Message("Server", "Server " + name + " started on port " + port));
+            while (true) {
                 Socket clientSocket = serverSocket.accept();
-                ClientApplication clientHandler = new ClientApplication(clientSocket, this);
-                clients.add(clientHandler);
-                new Thread(clientHandler).start();
-            }*/
+                String username = JOptionPane.showInputDialog("Enter your username:");
+                if (username == null || username.trim().isEmpty()) {
+                    username = "No name";
+                }
+                ClientInfo inf = new ClientInfo(username, clientSocket.getPort());
+                clients.add(inf);
+                new Thread(() -> clientManaging(clientSocket)).start();
+            }
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            System.err.println("Connection can't be established" + e.getMessage());
         } finally {
             closeServerSocket();
+        }
+    }
+
+    public void clientManaging(Socket socket) {
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+            
+
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+            close(socket);
+        }
+    }
+    public void close(Socket socket) {
+        try {
+            if (socket != null) socket.close();
+            if (out != null) out.close();
+            if (in != null) in.close();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
         }
     }
 
@@ -68,17 +96,18 @@ public class ServerApplication {
         }
     }
 
-    public synchronized void addClient(String name, ClientApplication m) {
-        clients.put(name, m);
+    public synchronized void addClient(ClientInfo c) {
+        clients.add(c);
     }
 
     public synchronized void removeClient(String name) {
         clients.remove(name);
     }
 
-    public synchronized Map<String, ClientApplication> getClients() {
-        return new HashMap<>(clients);
+    public synchronized ArrayList<ClientInfo> getClients() {
+        return new ArrayList<>(clients);
     }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(()-> new ServerApplicationGUI());
 

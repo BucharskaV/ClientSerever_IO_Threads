@@ -9,42 +9,50 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ClientApplication implements Runnable {
-
+public class ClientApplication {
+    private String host;
+    private int serverPort;
     private ClientApplicationGUI app;
     private String username;
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
-    public ClientApplication(ClientApplicationGUI app, String host, int port) {
+    public ClientApplication(ClientApplicationGUI app, String host, int serverPort) {
         this.app = app;
-        //this.username = app.getUsername();
+        this.host = host;
+        this.serverPort = serverPort;
+    }
+    public void startClient(){
         try {
-            socket = new Socket(host, port);
+            socket = new Socket(host, serverPort);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            new Thread(this).start();
+            new Thread(new MessageHandler()).start();
 
-            username = JOptionPane.showInputDialog("Enter your username:");
-            if (username == null || username.trim().isEmpty()) {
-                username = "No name";
+            while (true) {
+                if(app.getNewMessageAppeared()){
+                    out.println(app.getLastMessage());
+                }
             }
         } catch (IOException e) {
             System.err.println("Error connecting to server: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void run() {
-        /*try {
-
-
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
         } finally {
             close();
-        }*/
+        }
+    }
+    private class MessageHandler implements Runnable {
+        @Override
+        public void run() {
+            try {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println(message);
+                }
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+            }
+        }
     }
 
     public void close() {
@@ -62,5 +70,6 @@ public class ClientApplication implements Runnable {
         SwingUtilities.invokeLater(app);
 
         ClientApplication client = new ClientApplication(app, "localhost", 11111);
+        client.startClient();
     }
 }
