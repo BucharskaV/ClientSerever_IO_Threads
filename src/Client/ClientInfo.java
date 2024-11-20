@@ -1,11 +1,15 @@
 package Client;
 
+import java.net.Socket;
+
 public class ClientInfo {
     private String clientName;
     private int clientPort;
-    public ClientInfo(String clientName, int clientPort) {
+    private Socket clientSocket;
+    public ClientInfo(String clientName, int clientPort, Socket socket) {
         this.clientName = clientName;
         this.clientPort = clientPort;
+        this.clientSocket = socket;
     }
 
     public String getClientName() {
@@ -24,4 +28,11 @@ public class ClientInfo {
         this.clientPort = clientPort;
     }
 
+    public Socket getClientSocket() {
+        return clientSocket;
+    }
+
+    public void setClientSocket(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+    }
 }

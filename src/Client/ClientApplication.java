@@ -1,7 +1,5 @@
 package Client;
 
-import Server.ServerApplicationGUI;
-
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,7 +30,7 @@ public class ClientApplication {
 
             while (true) {
                 if(app.getNewMessageAppeared()){
-                    out.println(app.getLastMessage());
+                    out.println(app.getMylastMessage());
                 }
             }
         } catch (IOException e) {
@@ -46,13 +44,40 @@ public class ClientApplication {
         public void run() {
             try {
                 String message;
+                String importantInfo = "";
+
                 while ((message = in.readLine()) != null) {
-                    System.out.println(message);
+                    System.out.println("Received: " + message);
+                    String prefix = "Important Info: ";
+                    if (message.startsWith(prefix)) {
+                        do {
+                            importantInfo += message.substring(prefix.length()) + "\n";
+                        } while ((message = in.readLine()) != null && message.startsWith(prefix));
+
+                        app.setImportantInfo(importantInfo.trim());
+                        importantInfo = "";
+                    } else {
+                        app.addMessage(message);
+                    }
                 }
+                /*String message;
+                while ((message = in.readLine()) != null) {
+                    String prefix = "Important Info: ";
+                    if (message.startsWith(prefix)) {
+                        app.setImportantInfo(message.substring(prefix.length()));
+                    } else {
+                        app.addMessage(message);
+                    }
+                }*/
             } catch (IOException e) {
                 System.err.println(e.getMessage());
             }
         }
+    }
+
+    public void sendMessage(String message) {
+        out.println(message);
+        out.flush();
     }
 
     public void close() {

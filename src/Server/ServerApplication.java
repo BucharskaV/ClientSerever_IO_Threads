@@ -51,8 +51,9 @@ public class ServerApplication {
                 if (username == null || username.trim().isEmpty()) {
                     username = "No name";
                 }
-                ClientInfo inf = new ClientInfo(username, clientSocket.getPort());
+                ClientInfo inf = new ClientInfo(username, clientSocket.getPort(), clientSocket);
                 clients.add(inf);
+                broadcastMessage(new Message("Server", username + " is connected"), clientSocket);
                 new Thread(() -> clientManaging(clientSocket)).start();
             }
         } catch (IOException e) {
@@ -62,19 +63,61 @@ public class ServerApplication {
         }
     }
 
+    public void manageImportantInfo(){
+        String info = "Current connected clients:\n";
+        for (ClientInfo client : clients) {
+            info += client.getClientName() + "\n";
+        }
+        info += "Instructions:\n";
+        info.lines().forEach(line -> broadcastMessage(new Message("Important Info", line)));
+
+    }
+    public void broadcastMessage(Message message){
+        synchronized (clients){
+            for (ClientInfo client : clients) {
+                 try {
+                     PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
+                     out.println(message.toString());
+                 } catch (IOException e) {
+                        System.err.println(e.getMessage());
+                 }
+            }
+        }
+    }
+    public void broadcastMessage(Message message, Socket socketAvoid) {
+        synchronized (clients){
+            for (ClientInfo client : clients) {
+                if(client.getClientSocket() != socketAvoid){
+                    try {
+                        PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
+                        out.println(message.toString());
+                    } catch (IOException e) {
+                        System.err.println(e.getMessage());
+                    }
+                }
+
+            }
+        }
+    }
     public void clientManaging(Socket socket) {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-            
-
+            manageImportantInfo();
+            String message;
+            while ((message = in.readLine()) != null) {
+                //ServerApplicationGUI.addMessage("Server", "Server " + name + " started on port " + port));
+                System.out.println(message);
+            }
         }catch (Exception e) {
             System.out.println(e.getMessage());
         } finally {
             close(socket);
         }
     }
+
+
+
     public void close(Socket socket) {
         try {
             if (socket != null) socket.close();

@@ -10,14 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientApplicationGUI extends JFrame implements Runnable{
-    private static List<Message> messages = new ArrayList<Message>();;
-    private static JList<Message> messageList;
-    private static DefaultListModel<Message> messageDefaultListModel = new DefaultListModel<>();
+    private List<String> messages = new ArrayList<String>();;
+    private JList<String> messageList;
+    private DefaultListModel<String> messageDefaultListModel = new DefaultListModel<>();
+    private JTextArea importantInfoArea;
     private String username;
-    private Message lastMessage;
-    private Boolean isNewMessageAppeared = false;
+    private Message mylastMessage;
+    private Boolean isNewMyMessageAppeared = false;
+    private String importantInfo = "";
     public ClientApplicationGUI() {
-        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(600, 400);
         this.setLocationRelativeTo(null);
         this.setTitle("Client Application");
@@ -61,8 +63,8 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
 
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BorderLayout());
-        JLabel importantInfoLabel = new JLabel("Important info");
-        JTextArea importantInfoArea = new JTextArea();
+        JLabel importantInfoLabel = new JLabel(importantInfo);
+        importantInfoArea = new JTextArea();
         importantInfoArea.setEditable(false);
         JScrollPane importantScrollPane = new JScrollPane(importantInfoArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         rightPanel.add(importantInfoLabel, BorderLayout.NORTH);
@@ -77,9 +79,9 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                lastMessage = new Message(username, messageField.getText());
-                messages.add(lastMessage);
-                isNewMessageAppeared = true;
+                mylastMessage = new Message(username, messageField.getText());
+                messages.add(mylastMessage.toString());
+                isNewMyMessageAppeared = true;
                 messageField.setText("");
             }
         });
@@ -96,25 +98,35 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
         this.username = username;
     }
 
-    public static void addMessage(Message m){
+    public void addMessage(String m){
         messages.add(m);
         messageDefaultListModel.addElement(m);
+        importantInfoArea.setText(importantInfo);
     }
 
     public Boolean getNewMessageAppeared() {
-        return isNewMessageAppeared;
+        return isNewMyMessageAppeared;
     }
 
     public void setNewMessageAppeared(Boolean newMessageAppeared) {
-        isNewMessageAppeared = newMessageAppeared;
+        isNewMyMessageAppeared = newMessageAppeared;
     }
 
-    public Message getLastMessage() {
-        return lastMessage;
+    public Message getMylastMessage() {
+        return mylastMessage;
     }
 
-    public void setLastMessage(Message lastMessage) {
-        this.lastMessage = lastMessage;
+    public void setMylastMessage(Message mylastMessage) {
+        this.mylastMessage = mylastMessage;
+    }
+
+    public String getImportantInfo() {
+        return importantInfo;
+    }
+
+    public void setImportantInfo(String importantInfo) {
+        this.importantInfo = importantInfo;
+        importantInfoArea.setText(importantInfo);
     }
 
     @Override
