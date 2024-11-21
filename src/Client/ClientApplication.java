@@ -28,15 +28,13 @@ public class ClientApplication {
 
             new Thread(new MessageHandler()).start();
 
-            while (true) {
+            /*while (true) {
                 if(app.getNewMessageAppeared()){
                     out.println(app.getMylastMessage());
                 }
-            }
+            }*/
         } catch (IOException e) {
             System.err.println("Error connecting to server: " + e.getMessage());
-        } finally {
-            close();
         }
     }
     private class MessageHandler implements Runnable {
@@ -44,33 +42,19 @@ public class ClientApplication {
         public void run() {
             try {
                 String message;
-                String importantInfo = "";
-
                 while ((message = in.readLine()) != null) {
-                    System.out.println("Received: " + message);
-                    String prefix = "Important Info: ";
-                    if (message.startsWith(prefix)) {
-                        do {
-                            importantInfo += message.substring(prefix.length()) + "\n";
-                        } while ((message = in.readLine()) != null && message.startsWith(prefix));
-
-                        app.setImportantInfo(importantInfo.trim());
-                        importantInfo = "";
+                    if (message.startsWith("Important Info:")) {
+                        if(message.substring(16).equals("Welcome to the chat!"))
+                            app.clearImportantInfo();
+                        app.setImportantInfo(message.substring(16)+"\n");
                     } else {
                         app.addMessage(message);
                     }
                 }
-                /*String message;
-                while ((message = in.readLine()) != null) {
-                    String prefix = "Important Info: ";
-                    if (message.startsWith(prefix)) {
-                        app.setImportantInfo(message.substring(prefix.length()));
-                    } else {
-                        app.addMessage(message);
-                    }
-                }*/
             } catch (IOException e) {
                 System.err.println(e.getMessage());
+            } finally {
+                close();
             }
         }
     }

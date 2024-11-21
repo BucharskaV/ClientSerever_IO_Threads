@@ -21,7 +21,7 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     public ClientApplicationGUI() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(600, 400);
-        this.setLocationRelativeTo(null);
+        this.setLocation(0, 0);
         this.setTitle("Client Application");
         this.setLayout(new BorderLayout());
 
@@ -63,8 +63,8 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
 
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BorderLayout());
-        JLabel importantInfoLabel = new JLabel(importantInfo);
-        importantInfoArea = new JTextArea();
+        JLabel importantInfoLabel = new JLabel("Important Info:");
+        importantInfoArea = new JTextArea(importantInfo);
         importantInfoArea.setEditable(false);
         JScrollPane importantScrollPane = new JScrollPane(importantInfoArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         rightPanel.add(importantInfoLabel, BorderLayout.NORTH);
@@ -125,10 +125,13 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     }
 
     public void setImportantInfo(String importantInfo) {
-        this.importantInfo = importantInfo;
-        importantInfoArea.setText(importantInfo);
+        this.importantInfo += importantInfo;
+        importantInfoArea.setText(this.importantInfo);
     }
 
+    public void clearImportantInfo(){
+        this.importantInfo = "";
+    }
     @Override
     public void run() {
         this.setVisible(true);

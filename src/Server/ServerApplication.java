@@ -36,6 +36,7 @@ public class ServerApplication {
                     default: throw new IOException("Invalid setting: " + settings[0]);
                 }
             }
+            ServerApplicationGUI.addMessage(new Message("Server", "Loading configuration file is done"));
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -47,40 +48,53 @@ public class ServerApplication {
             ServerApplicationGUI.addMessage(new Message("Server", "Server " + name + " started on port " + port));
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                String username = JOptionPane.showInputDialog("Enter your username:");
-                if (username == null || username.trim().isEmpty()) {
-                    username = "No name";
-                }
-                ClientInfo inf = new ClientInfo(username, clientSocket.getPort(), clientSocket);
-                clients.add(inf);
-                broadcastMessage(new Message("Server", username + " is connected"), clientSocket);
-                new Thread(() -> clientManaging(clientSocket)).start();
+                new Thread(() -> handleNewClient(clientSocket)).start();
             }
         } catch (IOException e) {
-            System.err.println("Connection can't be established" + e.getMessage());
+            System.err.println("Connection can't be established: " + e.getMessage());
         } finally {
             closeServerSocket();
         }
     }
 
-    public void manageImportantInfo(){
-        String info = "Current connected clients:\n";
-        for (ClientInfo client : clients) {
-            info += client.getClientName() + "\n";
+    public void handleNewClient(Socket clientSocket) {
+        try {
+            String username = JOptionPane.showInputDialog("Enter your username:");
+            if (username == null || username.trim().isEmpty()) {
+                username = "No name";
+            }
+            ClientInfo newClient = new ClientInfo(username, clientSocket.getPort(), clientSocket);
+            synchronized (clients) {
+                clients.add(newClient);
+            }
+            broadcastMessage(new Message("Server", username + " has connected"));
+            manageImportantInfo();
+            clientManaging(clientSocket);
+        } catch (Exception e) {
+            System.err.println("Error handling new client: " + e.getMessage());
         }
-        info += "Instructions:\n";
-        info.lines().forEach(line -> broadcastMessage(new Message("Important Info", line)));
-
     }
-    public void broadcastMessage(Message message){
-        synchronized (clients){
+
+    public void manageImportantInfo() {
+        synchronized (clients) {
+            broadcastMessage(new Message("Important Info", "Welcome to the chat!"));
+            broadcastMessage(new Message("Important Info", "Current connected clients:"));
+            for (ClientInfo c : clients) {
+                broadcastMessage(new Message("Important Info", c.getClientName()));
+            }
+        }
+        broadcastMessage(new Message("Important Info", "Instructions:"));
+    }
+
+    public void broadcastMessage(Message message) {
+        synchronized (clients) {
             for (ClientInfo client : clients) {
-                 try {
-                     PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
-                     out.println(message.toString());
-                 } catch (IOException e) {
-                        System.err.println(e.getMessage());
-                 }
+                try {
+                    PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
+                    out.println(message.toString());
+                } catch (IOException e) {
+                    System.err.println("Error broadcasting message: " + e.getMessage());
+                }
             }
         }
     }
@@ -100,14 +114,37 @@ public class ServerApplication {
         }
     }
     public void clientManaging(Socket socket) {
+        ClientInfo currentClient = null;
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            manageImportantInfo();
+
+            synchronized (clients) {
+                for (ClientInfo client : clients) {
+                    if (client.getClientSocket().equals(socket)) {
+                        currentClient = client;
+                        break;
+                    }
+                }
+            }
+
+            if (currentClient == null) {
+                System.err.println("Unable to find client information for the socket.");
+                return;
+            }
+
             String message;
             while ((message = in.readLine()) != null) {
-                //ServerApplicationGUI.addMessage("Server", "Server " + name + " started on port " + port));
-                System.out.println(message);
+                message = message.trim(); // Remove leading and trailing whitespace
+                if (!message.isEmpty()) {
+                    if (message.equalsIgnoreCase("quit")) {
+                        // Handle client disconnection
+                        break;
+                    }
+
+                    // Broadcast received message to all other clients
+                    broadcastMessage(new Message(currentClient.getClientName(), message));
+                }
             }
         }catch (Exception e) {
             System.out.println(e.getMessage());
