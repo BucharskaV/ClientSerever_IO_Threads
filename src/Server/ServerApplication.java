@@ -76,8 +76,9 @@ public class ServerApplication {
     public void handleNewClient(Socket clientSocket) {
         try {
             String username = JOptionPane.showInputDialog("Enter your username:");
-            if (username == null || username.trim().isEmpty()) {
-                username = "No name " + countNoName;
+            username = username.trim().replace(' ', '_');
+            if (username == null || username.isEmpty()) {
+                username = "No_name_" + countNoName;
             }
             countNoName++;
             ClientInfo newClient = new ClientInfo(username, clientSocket.getPort(), clientSocket);
