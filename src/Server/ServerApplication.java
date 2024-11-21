@@ -1,6 +1,5 @@
 package Server;
 
-import Client.ClientApplication;
 import Client.ClientInfo;
 
 import javax.swing.*;
@@ -17,7 +16,7 @@ public class ServerApplication {
     private BufferedReader in;
     private List<String> bannedPhrases = new ArrayList<>();
     private List<ClientInfo> clients = new ArrayList<>();
-
+    private static int countNoName = 1;
     public ServerApplication(String fileConfigName) {
         loadConfigurationFile(fileConfigName);
     }
@@ -46,6 +45,10 @@ public class ServerApplication {
         try {
             serverSocket = new ServerSocket(port);
             ServerApplicationGUI.addMessage(new Message("Server", "Server " + name + " started on port " + port));
+            ServerApplicationGUI.addMessage(new Message("Server", "Banned phrases:"));
+            for(String phrase : bannedPhrases){
+                ServerApplicationGUI.addMessage(new Message("Server", phrase));
+            }
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 new Thread(() -> handleNewClient(clientSocket)).start();
@@ -61,13 +64,15 @@ public class ServerApplication {
         try {
             String username = JOptionPane.showInputDialog("Enter your username:");
             if (username == null || username.trim().isEmpty()) {
-                username = "No name";
+                username = "No name " + countNoName;
             }
+            countNoName++;
             ClientInfo newClient = new ClientInfo(username, clientSocket.getPort(), clientSocket);
             synchronized (clients) {
                 clients.add(newClient);
             }
             broadcastMessage(new Message("Server", username + " has connected"));
+            ServerApplicationGUI.addMessage(new Message("Server", username + " has connected"));
             manageImportantInfo();
             clientManaging(clientSocket);
         } catch (Exception e) {
@@ -77,13 +82,32 @@ public class ServerApplication {
 
     public void manageImportantInfo() {
         synchronized (clients) {
-            broadcastMessage(new Message("Important Info", "Welcome to the chat!"));
-            broadcastMessage(new Message("Important Info", "Current connected clients:"));
-            for (ClientInfo c : clients) {
-                broadcastMessage(new Message("Important Info", c.getClientName()));
+            broadcastImportantInfo("Welcome to the chat!");
+            broadcastImportantInfo("Current connected clients:");
+            for (ClientInfo client : clients) {
+                broadcastImportantInfo(client.getClientName());
+            }
+            String[] instructions = {
+                    "Instructions:",
+                    "To disconnect enter: /quit",
+                    "To show banned phrases: /banned",
+                    "To send a message to every other client:",
+                    "/new <your message>",
+                    "To send a message to a specific person:",
+                    "/new /onlyto1 username <your message>",
+                    "To send a message to multiple specific people:",
+                    "/new /onlytomany username1, username2 <your message>",
+                    "To send a message to every other connected client, with exception to some people:",
+                    "/new /without username1, username2 <your message>"
+            };
+            for (String instruction : instructions) {
+                broadcastImportantInfo(instruction);
             }
         }
-        broadcastMessage(new Message("Important Info", "Instructions:"));
+    }
+
+    public void broadcastImportantInfo(String message) {
+        broadcastMessage(new Message("Important Info", message));
     }
 
     public void broadcastMessage(Message message) {
@@ -115,6 +139,7 @@ public class ServerApplication {
     }
     public void clientManaging(Socket socket) {
         ClientInfo currentClient = null;
+        String usernameDisconnect = null;
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -135,57 +160,50 @@ public class ServerApplication {
 
             String message;
             while ((message = in.readLine()) != null) {
-                message = message.trim(); // Remove leading and trailing whitespace
-                if (!message.isEmpty()) {
-                    if (message.equalsIgnoreCase("quit")) {
-                        // Handle client disconnection
-                        break;
-                    }
-
-                    // Broadcast received message to all other clients
-                    broadcastMessage(new Message(currentClient.getClientName(), message));
+                message = message.trim();
+                System.out.println(message);
+                if (message.equals("/quit")) {
+                    System.out.println("Quitting... if");
+                    usernameDisconnect = currentClient.getClientName();
+                    //handleClientDisconnection(socket);
+                    break;
                 }
+
+                broadcastMessage(new Message(currentClient.getClientName(), message), socket);
+                ServerApplicationGUI.addMessage(new Message(currentClient.getClientName(), message));
             }
         }catch (Exception e) {
             System.out.println(e.getMessage());
         } finally {
-            close(socket);
+            System.out.println("Quitting... finally");
+            handleClientDisconnection(socket, usernameDisconnect);
         }
     }
 
-
-
-    public void close(Socket socket) {
+    public void handleClientDisconnection(Socket socket, String username) {
         try {
-            if (socket != null) socket.close();
+            broadcastMessage(new Message("Server", username + " has disconnected"));
+            socket.close();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        for (ClientInfo client : clients){
+            if(client.getClientSocket() == socket){
+                clients.remove(client);
+                System.out.println("Removed");
+            }
+        }
+        manageImportantInfo();
+    }
+
+    public void closeServerSocket() {
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
             if (out != null) out.close();
             if (in != null) in.close();
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
-    }
-
-    public void closeServerSocket() {
-        if (serverSocket != null && !serverSocket.isClosed()) {
-            try {
-                serverSocket.close();
-                System.out.println("Server socket closed.");
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-            }
-        }
-    }
-
-    public synchronized void addClient(ClientInfo c) {
-        clients.add(c);
-    }
-
-    public synchronized void removeClient(String name) {
-        clients.remove(name);
-    }
-
-    public synchronized ArrayList<ClientInfo> getClients() {
-        return new ArrayList<>(clients);
     }
 
     public static void main(String[] args) {

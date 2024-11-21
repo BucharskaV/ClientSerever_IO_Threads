@@ -28,11 +28,18 @@ public class ClientApplication {
 
             new Thread(new MessageHandler()).start();
 
-            /*while (true) {
-                if(app.getNewMessageAppeared()){
+            while (true) {
+                Boolean mybool = app.getNewMyMessageAppeared();
+                if (mybool) {
                     out.println(app.getMylastMessage());
+                    app.setNewMyMessageAppeared(false);
                 }
-            }*/
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         } catch (IOException e) {
             System.err.println("Error connecting to server: " + e.getMessage());
         }
@@ -69,6 +76,7 @@ public class ClientApplication {
             if (socket != null) socket.close();
             if (out != null) out.close();
             if (in != null) in.close();
+            System.exit(0);
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }

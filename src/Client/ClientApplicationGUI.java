@@ -14,9 +14,8 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     private JList<String> messageList;
     private DefaultListModel<String> messageDefaultListModel = new DefaultListModel<>();
     private JTextArea importantInfoArea;
-    private String username;
-    private Message mylastMessage;
-    private Boolean isNewMyMessageAppeared = false;
+    private String mylastMessage;
+    private Boolean isNewMyMessageAppeared;
     private String importantInfo = "";
     public ClientApplicationGUI() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -26,6 +25,7 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
         this.setLayout(new BorderLayout());
 
         fillGUI();
+        isNewMyMessageAppeared = false;
     }
     public void fillGUI(){
         JPanel topPanel = new JPanel();
@@ -79,9 +79,8 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mylastMessage = new Message(username, messageField.getText());
-                messages.add(mylastMessage.toString());
-                isNewMyMessageAppeared = true;
+                mylastMessage = messageField.getText();
+                setNewMyMessageAppeared(true);
                 messageField.setText("");
             }
         });
@@ -90,33 +89,17 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
         this.add(submitButton, BorderLayout.SOUTH);
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
     public void addMessage(String m){
         messages.add(m);
         messageDefaultListModel.addElement(m);
         importantInfoArea.setText(importantInfo);
     }
 
-    public Boolean getNewMessageAppeared() {
-        return isNewMyMessageAppeared;
-    }
-
-    public void setNewMessageAppeared(Boolean newMessageAppeared) {
-        isNewMyMessageAppeared = newMessageAppeared;
-    }
-
-    public Message getMylastMessage() {
+    public String getMylastMessage() {
         return mylastMessage;
     }
 
-    public void setMylastMessage(Message mylastMessage) {
+    public void setMylastMessage(String mylastMessage) {
         this.mylastMessage = mylastMessage;
     }
 
@@ -132,6 +115,16 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     public void clearImportantInfo(){
         this.importantInfo = "";
     }
+
+
+    public void setNewMyMessageAppeared(Boolean newMyMessageAppeared) {
+        isNewMyMessageAppeared = newMyMessageAppeared;
+    }
+
+    public Boolean getNewMyMessageAppeared() {
+        return isNewMyMessageAppeared;
+    }
+
     @Override
     public void run() {
         this.setVisible(true);
