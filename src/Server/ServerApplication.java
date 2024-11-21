@@ -17,6 +17,19 @@ public class ServerApplication {
     private List<String> bannedPhrases = new ArrayList<>();
     private List<ClientInfo> clients = new ArrayList<>();
     private static int countNoName = 1;
+    private String[] instructions = {
+            "Instructions:",
+            "To disconnect enter: /quit",
+            "To show banned phrases: /banned",
+            "To send a message to every other client:",
+            "<your message>",
+            "To send a message to a specific person:",
+            "/onlyto1 username <your message>",
+            "To send a message to multiple specific people:",
+            "/onlytomany username1, username2 <your message>",
+            "To send a message to every other connected client, with exception to some people:",
+            "/without username1, username2 <your message>"
+    };
     public ServerApplication(String fileConfigName) {
         loadConfigurationFile(fileConfigName);
     }
@@ -89,19 +102,6 @@ public class ServerApplication {
             for (ClientInfo client : clients) {
                 broadcastImportantInfo(client.getClientName());
             }
-            String[] instructions = {
-                    "Instructions:",
-                    "To disconnect enter: /quit",
-                    "To show banned phrases: /banned",
-                    "To send a message to every other client:",
-                    "/new <your message>",
-                    "To send a message to a specific person:",
-                    "/new /onlyto1 username <your message>",
-                    "To send a message to multiple specific people:",
-                    "/new /onlytomany username1, username2 <your message>",
-                    "To send a message to every other connected client, with exception to some people:",
-                    "/new /without username1, username2 <your message>"
-            };
             for (String instruction : instructions) {
                 broadcastImportantInfo(instruction);
             }
@@ -155,7 +155,25 @@ public class ServerApplication {
             }
         }
     }
+    public void processMessage(String message, String username, Socket socket) {
+        String[] parts = message.split(" ", 3);
+        String command = parts[0];
+        String recipient = parts[1];
+        String m = parts[2];
 
+        if(command.equals("/onlyto1")){
+            broadcastMessageOnlyTo1(new Message(username, m), recipient);
+        }
+        else if(command.equals("/onlytomany")){
+
+        }
+        else if(command.equals("/without")){
+
+        }
+        else {
+            broadcastMessage(new Message(username, message), socket);
+        }
+    }
     public void clientManaging(Socket socket) {
         ClientInfo currentClient = null;
         String usernameDisconnect = null;
@@ -192,9 +210,14 @@ public class ServerApplication {
                     if (message.equals("/quit")) {
                         usernameDisconnect = currentClient.getClientName();
                         break;
-                    }else {
-
-                        broadcastMessage(new Message(currentClient.getClientName(), message), socket);
+                    }else if (message.equals("/banned")) {
+                        System.out.println("Banned");
+                        for (String instruction : instructions) {
+                            broadcastMessageOnlyTo1(new Message("Server", instruction), currentClient.getClientName());
+                        }
+                    }
+                    else {
+                        processMessage(message, currentClient.getClientName(), socket);
                     }
                 }
             }
