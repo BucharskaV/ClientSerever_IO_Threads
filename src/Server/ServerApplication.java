@@ -77,6 +77,8 @@ public class ServerApplication {
             clientManaging(clientSocket);
         } catch (Exception e) {
             System.err.println("Error handling new client: " + e.getMessage());
+        }finally {
+            removeClient(clientSocket);
         }
     }
 
@@ -122,6 +124,22 @@ public class ServerApplication {
             }
         }
     }
+
+    public void broadcastMessageOnlyTo1(Message message, String username) {
+        synchronized (clients) {
+            for (ClientInfo client : clients) {
+                if(client.getClientName().equals(username)){
+                    try {
+                        PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
+                        out.println(message.toString());
+                    } catch (IOException e) {
+                        System.err.println(e.getMessage());
+                    }
+                }
+
+            }
+        }
+    }
     public void broadcastMessage(Message message, Socket socketAvoid) {
         synchronized (clients){
             for (ClientInfo client : clients) {
@@ -137,6 +155,7 @@ public class ServerApplication {
             }
         }
     }
+
     public void clientManaging(Socket socket) {
         ClientInfo currentClient = null;
         String usernameDisconnect = null;
@@ -161,39 +180,48 @@ public class ServerApplication {
             String message;
             while ((message = in.readLine()) != null) {
                 message = message.trim();
-                System.out.println(message);
-                if (message.equals("/quit")) {
-                    System.out.println("Quitting... if");
-                    usernameDisconnect = currentClient.getClientName();
-                    //handleClientDisconnection(socket);
-                    break;
-                }
-
-                broadcastMessage(new Message(currentClient.getClientName(), message), socket);
                 ServerApplicationGUI.addMessage(new Message(currentClient.getClientName(), message));
+                Boolean isContainsBanned = false;
+                for (String phrase : bannedPhrases) {
+                    if (message.contains(phrase)) {
+                        broadcastMessageOnlyTo1(new Message("Server", "Message blocked due to banned phrase: " + phrase), currentClient.getClientName());
+                        isContainsBanned = true;
+                    }
+                }
+                if(!isContainsBanned){
+                    if (message.equals("/quit")) {
+                        usernameDisconnect = currentClient.getClientName();
+                        break;
+                    }else {
+
+                        broadcastMessage(new Message(currentClient.getClientName(), message), socket);
+                    }
+                }
             }
         }catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         } finally {
-            System.out.println("Quitting... finally");
             handleClientDisconnection(socket, usernameDisconnect);
         }
     }
 
+    public void removeClient(Socket socket) {
+        for (ClientInfo client : clients){
+            if(client.getClientSocket() == socket){
+                clients.remove(client);
+            }
+        }
+        manageImportantInfo();
+    }
     public void handleClientDisconnection(Socket socket, String username) {
         try {
             broadcastMessage(new Message("Server", username + " has disconnected"));
+            ServerApplicationGUI.addMessage(new Message("Server", username + " has disconnected"));
             socket.close();
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
-        for (ClientInfo client : clients){
-            if(client.getClientSocket() == socket){
-                clients.remove(client);
-                System.out.println("Removed");
-            }
-        }
-        manageImportantInfo();
+        removeClient(socket);
     }
 
     public void closeServerSocket() {
@@ -201,6 +229,7 @@ public class ServerApplication {
             if (serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
             if (out != null) out.close();
             if (in != null) in.close();
+            System.exit(0);
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }

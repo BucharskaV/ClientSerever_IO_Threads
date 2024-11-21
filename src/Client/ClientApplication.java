@@ -29,10 +29,11 @@ public class ClientApplication {
             new Thread(new MessageHandler()).start();
 
             while (true) {
-                Boolean mybool = app.getNewMyMessageAppeared();
-                if (mybool) {
+                Boolean flag = app.getNewMyMessageAppeared();
+                if (flag) {
                     out.println(app.getMylastMessage());
                     app.setNewMyMessageAppeared(false);
+                    app.setMylastMessage("");
                 }
                 try {
                     Thread.sleep(100);
