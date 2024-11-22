@@ -26,9 +26,9 @@ public class ServerApplication {
             "To send a message to a specific person:",
             "/onlyto1 username <your message>",
             "To send a message to multiple specific people:",
-            "/onlytomany username1, username2 <your message>",
+            "/onlytomany username1,username2 <your message>",
             "To send a message to every other connected client, with exception to some people:",
-            "/without username1, username2 <your message>"
+            "/without username1,username2 <your message>"
     };
     public ServerApplication(String fileConfigName) {
         loadConfigurationFile(fileConfigName);
@@ -89,8 +89,9 @@ public class ServerApplication {
             ServerApplicationGUI.addMessage(new Message("Server", username + " has connected"));
             manageImportantInfo();
             clientManaging(clientSocket);
+            System.out.println("OK");
         } catch (Exception e) {
-            System.err.println("Error handling new client: " + e.getMessage());
+            System.err.println("Error managing new client: " + e.getMessage());
         }finally {
             removeClient(clientSocket);
         }
@@ -120,7 +121,7 @@ public class ServerApplication {
                     PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
                     out.println(message.toString());
                 } catch (IOException e) {
-                    System.err.println("Error broadcasting message: " + e.getMessage());
+                    System.err.println(e.getMessage());
                 }
             }
         }
@@ -138,6 +139,55 @@ public class ServerApplication {
                     }
                 }
 
+            }
+        }
+    }
+
+    public void broadcastMessageOnlyTo1(Message message, Socket socket) {
+        try {
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.println(message.toString());
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+    public void broadcastMessageOnlyToMany(Message message, String[] usernames) {
+        synchronized (clients) {
+            for(String username : usernames){
+                for (ClientInfo client : clients){
+                    if(client.getClientName().equals(username)){
+                        try {
+                            PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
+                            out.println(message.toString());
+                        } catch (IOException e) {
+                            System.err.println(e.getMessage());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    public void broadcastMessageWithout(Message message, String[] usernamesAvoid, Socket socketAvoid) {
+        synchronized (clients) {
+            for (ClientInfo client : clients) {
+                boolean shouldAvoid = false;
+                for (String username : usernamesAvoid) {
+                    if (client.getClientName().equals(username)) {
+                        shouldAvoid = true;
+                        break;
+                    }
+                }
+                if (shouldAvoid || client.getClientSocket() == socketAvoid) {
+                    continue;
+                }
+
+                try {
+                    PrintWriter out = new PrintWriter(client.getClientSocket().getOutputStream(), true);
+                    out.println(message.toString());
+                } catch (IOException e) {
+                    System.err.println(e.getMessage());
+                }
             }
         }
     }
@@ -162,17 +212,18 @@ public class ServerApplication {
         String recipient = parts[1];
         String m = parts[2];
 
-        if(command.equals("/onlyto1")){
-            broadcastMessageOnlyTo1(new Message(username, m), recipient);
-        }
-        else if(command.equals("/onlytomany")){
-
-        }
-        else if(command.equals("/without")){
-
-        }
-        else {
-            broadcastMessage(new Message(username, message), socket);
+        switch (command) {
+            case "/onlyto1": broadcastMessageOnlyTo1(new Message(username, m), recipient);break;
+            case "/onlytomany": {
+                String[] recipients = recipient.split(",");
+                broadcastMessageOnlyToMany(new Message(username, m), recipients);
+                break;
+            }
+            case "/without": {
+                String[] recipients = recipient.split(",");
+                broadcastMessageWithout(new Message(username, m), recipients, socket);
+                break;
+            }
         }
     }
     public void clientManaging(Socket socket) {
@@ -192,7 +243,7 @@ public class ServerApplication {
             }
 
             if (currentClient == null) {
-                System.err.println("Unable to find client information for the socket.");
+                System.err.println("Unable to find information for the socket.");
                 return;
             }
 
@@ -203,22 +254,27 @@ public class ServerApplication {
                 Boolean isContainsBanned = false;
                 for (String phrase : bannedPhrases) {
                     if (message.contains(phrase)) {
-                        broadcastMessageOnlyTo1(new Message("Server", "Message blocked due to banned phrase: " + phrase), currentClient.getClientName());
+                        broadcastMessageOnlyTo1(new Message("Server", "Message blocked due to banned phrase: " + phrase), socket);
                         isContainsBanned = true;
                     }
                 }
                 if(!isContainsBanned){
-                    if (message.equals("/quit")) {
-                        usernameDisconnect = currentClient.getClientName();
-                        break;
-                    }else if (message.equals("/banned")) {
-                        System.out.println("Banned");
-                        for (String instruction : instructions) {
-                            broadcastMessageOnlyTo1(new Message("Server", instruction), currentClient.getClientName());
+                    if(message.startsWith("/")){
+                        if (message.equals("/quit")) {
+                            usernameDisconnect = currentClient.getClientName();
+                            break;
+                        }else if (message.equals("/banned")) {
+                            System.out.println("gr");
+                            broadcastMessageOnlyTo1(new Message("Server", "Banned phrases"), socket);
+                            for (String phrase : bannedPhrases) {
+                                broadcastMessageOnlyTo1(new Message("Server", phrase), socket);
+                            }
+                        } else {
+                            processMessage(message, currentClient.getClientName(), socket);
                         }
                     }
-                    else {
-                        processMessage(message, currentClient.getClientName(), socket);
+                    else{
+                        broadcastMessage(new Message(currentClient.getClientName(), message), socket);
                     }
                 }
             }
