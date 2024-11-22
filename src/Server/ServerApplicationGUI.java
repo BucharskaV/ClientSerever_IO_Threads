@@ -11,7 +11,7 @@ public class ServerApplicationGUI extends JFrame {
     private static DefaultListModel<Message> messageDefaultListModel = new DefaultListModel<>();
 
     public ServerApplicationGUI() {
-        this.setSize(new Dimension(600, 350));
+        this.setSize(new Dimension(400, 350));
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setVisible(true);

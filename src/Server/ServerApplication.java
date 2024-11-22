@@ -280,15 +280,14 @@ public class ServerApplication {
                 }
                 if(!isContainsBanned){
                     if(message.startsWith("/")){
-                        if (message.equals("/quit")) {
-                            usernameDisconnect = currentClient.getClientName();
-                            break;
-                        }else if (message.equals("/banned")) {
-                            System.out.println("gr");
+                        if (message.equals("/banned")) {
                             broadcastMessageOnlyTo1(new Message("Server", "Banned phrases"), socket);
                             for (String phrase : bannedPhrases) {
                                 broadcastMessageOnlyTo1(new Message("Server", phrase), socket);
                             }
+                        }else if (message.equals("/quit")) {
+                                usernameDisconnect = currentClient.getClientName();
+                                break;
                         } else {
                             processMessage(message, currentClient.getClientName(), socket);
                         }
