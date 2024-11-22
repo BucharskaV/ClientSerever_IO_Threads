@@ -80,6 +80,11 @@ public class ServerApplication {
                 username = "No_name_" + countNoName;
             }
             countNoName++;
+            for (ClientInfo client : clients){
+                if(client.getClientName().equals(username)){
+                    username += "_Copy";
+                }
+            }
             ClientInfo newClient = new ClientInfo(username, clientSocket.getPort(), clientSocket);
             synchronized (clients) {
                 clients.add(newClient);
@@ -204,6 +209,19 @@ public class ServerApplication {
             }
         }
     }
+    public boolean isUserExist(String username) {
+        synchronized (clients) {
+            for (ClientInfo client : clients) {
+                if(client.getClientName().equals(username)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public void handleUserDoesntExist(String username) {
+        JOptionPane.showMessageDialog(null, "User does not exist: " + username);
+    }
     public void processMessage(String message, String username, Socket socket) {
         String[] parts = message.split(" ", 3);
         String command = parts[0];
@@ -211,7 +229,11 @@ public class ServerApplication {
         String m = parts[2];
 
         switch (command) {
-            case "/onlyto1": broadcastMessageOnlyTo1(new Message(username, m), recipient);break;
+            case "/onlyto1": {
+                if(isUserExist(recipient)) broadcastMessageOnlyTo1(new Message(username, m), recipient);
+                else handleUserDoesntExist(recipient);
+                break;
+            }
             case "/onlytomany": {
                 String[] recipients = recipient.split(",");
                 broadcastMessageOnlyToMany(new Message(username, m), recipients);
