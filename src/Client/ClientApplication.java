@@ -11,15 +11,16 @@ public class ClientApplication {
     private String host;
     private int serverPort;
     private ClientApplicationGUI app;
-    private String username;
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
+
     public ClientApplication(ClientApplicationGUI app, String host, int serverPort) {
         this.app = app;
         this.host = host;
         this.serverPort = serverPort;
     }
+
     public void startClient(){
         try {
             socket = new Socket(host, serverPort);
@@ -45,6 +46,7 @@ public class ClientApplication {
             System.err.println("Error connecting to server: " + e.getMessage());
         }
     }
+
     private class MessageHandler implements Runnable {
         @Override
         public void run() {
@@ -65,11 +67,6 @@ public class ClientApplication {
                 close();
             }
         }
-    }
-
-    public void sendMessage(String message) {
-        out.println(message);
-        out.flush();
     }
 
     public void close() {

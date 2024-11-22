@@ -12,8 +12,6 @@ public class ServerApplication {
     private ServerSocket serverSocket;
     private int port;
     private String name;
-    private PrintWriter out;
-    private BufferedReader in;
     private List<String> bannedPhrases = new ArrayList<>();
     private List<ClientInfo> clients = new ArrayList<>();
     private static int countNoName = 1;
@@ -30,6 +28,7 @@ public class ServerApplication {
             "To send a message to every other connected client, with exception to some people:",
             "/without username1,username2 <your message>"
     };
+
     public ServerApplication(String fileConfigName) {
         loadConfigurationFile(fileConfigName);
     }
@@ -89,7 +88,6 @@ public class ServerApplication {
             ServerApplicationGUI.addMessage(new Message("Server", username + " has connected"));
             manageImportantInfo();
             clientManaging(clientSocket);
-            System.out.println("OK");
         } catch (Exception e) {
             System.err.println("Error managing new client: " + e.getMessage());
         }finally {
@@ -138,7 +136,6 @@ public class ServerApplication {
                         System.err.println(e.getMessage());
                     }
                 }
-
             }
         }
     }
@@ -151,6 +148,7 @@ public class ServerApplication {
             System.err.println(e.getMessage());
         }
     }
+
     public void broadcastMessageOnlyToMany(Message message, String[] usernames) {
         synchronized (clients) {
             for(String username : usernames){
@@ -168,6 +166,7 @@ public class ServerApplication {
             }
         }
     }
+
     public void broadcastMessageWithout(Message message, String[] usernamesAvoid, Socket socketAvoid) {
         synchronized (clients) {
             for (ClientInfo client : clients) {
@@ -202,7 +201,6 @@ public class ServerApplication {
                         System.err.println(e.getMessage());
                     }
                 }
-
             }
         }
     }
@@ -307,8 +305,6 @@ public class ServerApplication {
     public void closeServerSocket() {
         try {
             if (serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
-            if (out != null) out.close();
-            if (in != null) in.close();
             System.exit(0);
         } catch (IOException e) {
             System.err.println(e.getMessage());

@@ -18,7 +18,6 @@ public class ServerApplicationGUI extends JFrame {
         this.setTitle("Server Application");
 
         messageList = new JList<>(messageDefaultListModel);
-        //messageList.setVisibleRowCount(2);
         messageList.setForeground(Color.BLACK);
 
         JScrollPane scrollPane = new JScrollPane(messageList);

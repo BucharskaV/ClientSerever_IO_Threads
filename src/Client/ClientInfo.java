@@ -6,6 +6,7 @@ public class ClientInfo {
     private String clientName;
     private int clientPort;
     private Socket clientSocket;
+
     public ClientInfo(String clientName, int clientPort, Socket socket) {
         this.clientName = clientName;
         this.clientPort = clientPort;

@@ -3,6 +3,7 @@ package Server;
 public class Message {
     private String message;
     private String sender;
+
     public Message(String sender, String message) {
         if (message == null || message.trim().isEmpty()) {
             throw new IllegalArgumentException("Message cannot be null or empty");

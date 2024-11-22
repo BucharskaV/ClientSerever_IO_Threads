@@ -30,27 +30,13 @@ public class ClientApplicationGUI extends JFrame implements Runnable{
     public void fillGUI(){
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BorderLayout());
-        /*JPanel usernamePanel = new JPanel();
-        usernamePanel.setLayout(new GridLayout(1, 3));
-        JLabel usernameLabel = new JLabel("Username:");
-        JTextField usernameField = new JTextField();
-        JButton submitButton = new JButton("Submit");
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                username = usernameField.getText();
-            }
-        });*/
-        /*usernamePanel.add(usernameLabel);
-        usernamePanel.add(usernameField);
-        usernamePanel.add(submitButton);*/
+
         JPanel messagePanel = new JPanel();
         messagePanel.setLayout(new BorderLayout());
         JLabel messageLabel = new JLabel("Message:");
         JTextField messageField = new JTextField();
         messagePanel.add(messageLabel, BorderLayout.WEST);
         messagePanel.add(messageField, BorderLayout.CENTER);
-        //topPanel.add(usernamePanel, BorderLayout.NORTH);
         topPanel.add(messagePanel, BorderLayout.SOUTH);
 
         JPanel leftPanel = new JPanel();
